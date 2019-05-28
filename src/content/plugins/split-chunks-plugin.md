@@ -3,21 +3,29 @@ title: SplitChunksPlugin
 contributors:
   - sokra
   - jeremenichelli
+  - feaswcy
 related:
   - title: "webpack 4: Code Splitting, chunk graph and the splitChunks optimization"
     url: https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
 ---
 
-Originally, chunks (and modules imported inside them) were connected by a parent-child relationship in the internal webpack graph. The `CommonsChunkPlugin` was used to avoid duplicated dependencies across them, but further optimizations where not possible
-
-Since version 4 the `CommonsChunkPlugin` was removed in favor of `optimization.splitChunks` and `optimization.runtimeChunk` options. Here is how the new flow works.
+一般来说，chunks 在webpack内部模块关系图中通过父子关系连接，`CommonsChunkPlugin` 这个插件用来避免在他们之间产生重复的依赖，但是进一步的优化是不太可能的。
+从 webpack 4开始，`CommonsChunkPlugin` 被移除，取而代之的是配置选项中的`optimization.splitChunks` 和 `optimization.runtimeChunk` ，下面介绍新的配置是如何生效的。
 
 
 ## Defaults
 
 Out of the box `SplitChunksPlugin` should work great for most users.
+开箱即用的`SplitChunksPlugin`应该适合大多数用户
 
 By default it only affects on-demand chunks because changing initial chunks would affect the script tags the HTML file should include to run the project.
+默认情况下，它仅影响按需块，因为更改初始块会影响到HTML文件依赖的script文件以运行项目
+
+在下面的情况下，webpack将会自动将chunk进行分割：
+* chunk可以共享或者模块来自于`node_modules`文件夹
+* 在min+gz之前，新的chunk将会超过30kb
+* 模块按需加载时的最大并行请求数小于或等于5
+* 初始页面加载时的最大并行请求数小于或等于3
 
 webpack will automatically split chunks based on these conditions:
 
@@ -26,8 +34,10 @@ webpack will automatically split chunks based on these conditions:
 * Maximum number of parallel requests when loading chunks on demand would be lower or equal to 5
 * Maximum number of parallel requests at initial page load would be lower or equal to 3
 
+当试图满足最后两个条件时，会优先选择更大的块。 
 When trying to fulfill the last two conditions, bigger chunks are preferred.
 
+下面我们看一下例子
 Let's take a look at some examples.
 
 ### Defaults: Example 1
